@@ -8,10 +8,12 @@ from .serializers import BookSerializer, MemberSerializer, LoanSerializer, Categ
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import permission_classes
+from rest_framework.permissions import AllowAny 
 
 # Book CRUD APIs
 class BookListCreateView(generics.ListCreateAPIView):
-    queryset = Book.objects.all()
+    queryset = Book.objects.filter(copies_available__gt=0)
+    permission_classes = [AllowAny]
     serializer_class = BookSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category__name', 'copies_available']
@@ -88,24 +90,25 @@ class RegisterView(generics.CreateAPIView):
 
 class CookieLoginView(TokenObtainPairView):
     permission_classes = [AllowAny]
-
+    
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
         
-        # Set HttpOnly cookie instead of returning token
-        if response.data.get('access'):
-            response.set_cookie(
-                key='access_token',
-                value=response.data['access'],
-                httponly=True,
-                secure=False,  # True in production
-                samesite='Strict',
-                max_age=3600  # 1 hour
-            )
-            # Remove token from response body (security)
-            response.data = {'message': 'Login successful'}
+        access_token = response.data.get('access')
+        
+        response.set_cookie(
+            key='access_token',
+            value=access_token,
+            httponly=True,
+            samesite='lax',
+            secure=False,  # dev only
+            max_age=3600   # 1 hour
+        )
+        
+        response.data['access_token'] = access_token
         
         return response
+
 
 
 # User Dashboard - My Loans (Protected)

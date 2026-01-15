@@ -43,8 +43,9 @@ export function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       dispatch(loginStart());
-      await authAPI.login(data);
-      // Mock user data (get real from API later)
+      const result = await authAPI.login(data);
+      console.log({result});
+      
       dispatch(loginSuccess({ id: 1, username: data.username }));
       toast({
         title: "Login Successful!",

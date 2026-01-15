@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { useQuery } from '@tanstack/react-query'
-// import { bookAPI } from '@/lib/api'
+import { bookAPI } from '@/lib/api'  
 
 interface Book {
   id: number
@@ -21,19 +21,21 @@ interface Book {
 }
 
 export function BooksTable() {
-  const { data: books, isLoading } = useQuery<Book[]>({
+  const { data: books, isLoading, error } = useQuery<Book[]>({
     queryKey: ['books'],
-    queryFn: async () => {
-      const response = await fetch('http://127.0.0.1:8000/api/books/?copies_available__gt=0', {
-        credentials: 'include'
-      })
-      if (!response.ok) throw new Error('Failed to fetch books')
-      return response.json()
-    }
+    queryFn: bookAPI.getAvailableBooks,  // ✅ Proper API usage
   })
 
   if (isLoading) {
     return <div className="text-center py-12">Loading books...</div>
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12 text-destructive">
+        Failed to load books. Please refresh.
+      </div>
+    )
   }
 
   return (

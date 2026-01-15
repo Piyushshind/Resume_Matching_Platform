@@ -14,8 +14,7 @@ from pathlib import Path
 
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = False  # Set True in production (HTTPS)
-SESSION_COOKIE_SAMESITE = 'Strict'
-
+SESSION_COOKIE_SAMESITE = 'None'
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -151,16 +150,26 @@ SIMPLE_JWT = {
     'AUTH_COOKIE_SAMESITE': 'Strict',
 }
 
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': [
+#         'catalog.authentication.CookieJWTAuthentication',  # Custom cookie auth FIRST
+#         'rest_framework_simplejwt.authentication.JWTAuthentication',  # Header fallback
+#     ],
+#     'DEFAULT_PERMISSION_CLASSES': [
+#         'rest_framework.permissions.IsAuthenticated',
+#     ],
+# }
+
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'catalog.authentication.CookieJWTAuthentication',  # Custom cookie auth FIRST
-        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Header fallback
+     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'catalog.authentication.CookieJWTAuthentication',  # Custom cookie auth
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
-
 
 # CORS Settings
 CORS_ALLOWED_ORIGINS = [

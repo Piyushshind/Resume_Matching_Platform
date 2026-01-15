@@ -4,15 +4,19 @@ export const authAPI = {
   login: async (data: { username: string; password: string }) => {
     const response = await fetch(`${API_BASE}/auth/cookie-login/`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     })
     if (!response.ok) {
-      const error = await response.json()
+      const error = await response.json().catch(() => ({}))
       throw new Error(error.detail || 'Login failed')
     }
-    return response.json()
+    const result = await response.json()
+    
+    const token = result.access || result.access_token
+    localStorage.setItem('access_token', token)
+    return { token }
   },
   
   register: async (data: { username: string; email: string; password: string; password2: string }) => {
@@ -32,10 +36,18 @@ export const authAPI = {
 
 export const bookAPI = {
   getAvailableBooks: async () => {
+    const token = localStorage.getItem('access_token')
     const response = await fetch(`${API_BASE}/books/?copies_available__gt=0`, {
-      credentials: 'include'
+      headers: {
+        'Authorization': `Bearer ${token}`,  
+        'Content-Type': 'application/json',
+      },
     })
-    if (!response.ok) throw new Error('Failed to fetch books')
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}))
+      throw new Error(error.detail || 'Failed to fetch books')
+    }
     return response.json()
-  }
+  },
 }
+
