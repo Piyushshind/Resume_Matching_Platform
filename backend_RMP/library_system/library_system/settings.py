@@ -44,11 +44,13 @@ INSTALLED_APPS = [
     'rest_framework',     
     'django_filters',      
     'catalog',   
-    'rest_framework_simplejwt',        
+    'rest_framework_simplejwt',
+    'corsheaders',        
 ]
 
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -158,3 +160,32 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+
+
+# CORS Settings
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",     # Vite React frontend
+    "http://127.0.0.1:5173",    # Alternative localhost
+    "http://localhost:3000",     # Future Next.js/other
+]
+
+CORS_ALLOW_CREDENTIALS = True  # For cookies/JWT
+
+# Optional: Allow all methods/headers for development
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "authorization",
+    "content-type",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
