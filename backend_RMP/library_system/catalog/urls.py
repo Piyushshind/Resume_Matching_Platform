@@ -6,7 +6,7 @@ from .views import (
     CategoryListCreateView, CategoryRetrieveUpdateDestroyView,
     calculate_overdue_fines
 )
-from .views import RegisterView, UserLoansView, CookieLoginView
+from .views import RegisterView, UserLoansView, CookieLoginView, BorrowBookView, update_profile, change_password, return_loan
 
 # ADD THESE NEW IMPORTS:
 from rest_framework.views import APIView
@@ -60,9 +60,20 @@ urlpatterns = [
     # Auth
     path('auth/register/', RegisterView.as_view(), name='register'),
     path('auth/cookie-login/', CookieLoginView.as_view(), name='cookie-login'),
+
+    path('books/<int:book_id>/borrow/', BorrowBookView.as_view(), name='borrow-book'),
+
     
     # ADD NEW USER ENDPOINT:
     path('auth/me/', UserMeView.as_view(), name='me'),
     
     path('me/loans/', UserLoansView.as_view(), name='user-loans'),
+
+
+    path('profile/update/', update_profile),
+    path('profile/password/', change_password),
+
+    path('loans/<int:loan_id>/return/', return_loan),
+
+
 ]

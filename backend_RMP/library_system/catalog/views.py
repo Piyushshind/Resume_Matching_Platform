@@ -9,8 +9,17 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny 
+from rest_framework import status
+from rest_framework.response import Response
+from .models import Loan
+from .serializers import LoanSerializer
+from django.utils import timezone
+from datetime import timedelta
+from rest_framework.views import APIView
+from rest_framework.decorators import api_view, permission_classes
+from django.contrib.auth import update_session_auth_hash
 
-# Book CRUD APIs
+
 class BookListCreateView(generics.ListCreateAPIView):
     queryset = Book.objects.filter(copies_available__gt=0)
     permission_classes = [AllowAny]
@@ -118,3 +127,95 @@ class UserLoansView(generics.ListAPIView):
     
     def get_queryset(self):
         return Loan.objects.filter(member__user=self.request.user)
+
+
+
+
+
+
+
+class BorrowBookView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, book_id):
+        try:
+            book = Book.objects.get(id=book_id, copies_available__gt=0)
+            loan = Loan.objects.create(
+                member_id=request.user.id,  # Assuming User is member
+                book=book,
+                loan_date=timezone.now(),
+                due_date=timezone.now() + timedelta(days=14)
+            )
+            book.copies_available -= 1
+            book.save()
+            
+            serializer = LoanSerializer(loan)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        except Book.DoesNotExist:
+            return Response({"error": "Book not available"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_profile(request):
+    user = request.user
+    data = request.data
+    
+    user.username = data.get('username', user.username)
+    user.email = data.get('email', user.email)
+    user.save()
+    
+    update_session_auth_hash(request, user)  # Keep logged in
+    return Response({'message': 'Profile updated successfully'})
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    user = request.user
+    old_password = request.data.get('old_password')
+    new_password = request.data.get('new_password')
+    
+    if not user.check_password(old_password):
+        return Response({'error': 'Old password incorrect'}, status=400)
+    
+    user.set_password(new_password)
+    user.save()
+    update_session_auth_hash(request, user)
+    return Response({'message': 'Password changed successfully'})
+
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def return_loan(request, loan_id):
+    try:
+        loan = Loan.objects.get(id=loan_id, member_id=request.user.id)
+        book = loan.book
+        
+        # Calculate fine if overdue
+        if timezone.now() > loan.due_date:
+            days_overdue = (timezone.now() - loan.due_date).days
+            fine = days_overdue * 5  # $5 per day
+        else:
+            fine = 0
+        
+        loan.return_date = timezone.now()
+        loan.fine_amount = fine
+        loan.save()
+        
+        book.copies_available += 1
+        book.save()
+        
+        return Response({
+            'message': 'Book returned successfully',
+            'fine': fine,
+            'days_overdue': max(0, days_overdue)
+        })
+    except Loan.DoesNotExist:
+        return Response({'error': 'Loan not found'}, status=404)

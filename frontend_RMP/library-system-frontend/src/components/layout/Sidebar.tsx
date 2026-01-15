@@ -1,85 +1,66 @@
-import { BookOpen, User, LogOut, LayoutDashboard, History } from 'lucide-react'
-import { NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu'
+import { Link } from 'react-router-dom'
+import { BookOpen, User, LogOut, LayoutDashboard, History, Menu } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { useAppDispatch } from '@/store/hooks'
 import { logout } from '@/store/slices/authSlice'
-import { Link } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 
 export function Sidebar() {
   const dispatch = useAppDispatch()
+  const location = useLocation()
+
+  const navItems = [
+    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/books', label: 'Books', icon: BookOpen },
+    { href: '/loans', label: 'My Loans', icon: History },
+    { href: '/profile', label: 'Profile', icon: User },
+  ]
 
   const handleLogout = () => {
     dispatch(logout())
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Logo/Header */}
-      <div className="p-4 border-b">
-        <div className="font-bold text-xl text-primary">📚 Library</div>
-      </div>
-      
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
-        <div className="space-y-2">
-          <NavigationMenuItem className="w-full">
-            <NavigationMenuLink asChild>
-              <Link 
-                to="/dashboard" 
-                className="group flex w-full items-center rounded-md border p-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground justify-start h-12"
-              >
-                <LayoutDashboard className="mr-3 h-4 w-4" />
-                <span>Dashboard</span>
-              </Link>
-            </NavigationMenuLink>
-          </NavigationMenuItem>
-
-          <NavigationMenuItem className="w-full">
-            <NavigationMenuLink asChild>
-              <Link 
-                to="/books" 
-                className="group flex w-full items-center rounded-md border p-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground justify-start h-12"
-              >
-                <BookOpen className="mr-3 h-4 w-4" />
-                <span>Books</span>
-              </Link>
-            </NavigationMenuLink>
-          </NavigationMenuItem>
-
-          <NavigationMenuItem className="w-full">
-            <NavigationMenuLink asChild>
-              <Link 
-                to="/loans" 
-                className="group flex w-full items-center rounded-md border p-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground justify-start h-12"
-              >
-                <History className="mr-3 h-4 w-4" />
-                <span>My Loans</span>
-              </Link>
-            </NavigationMenuLink>
-          </NavigationMenuItem>
-
-          <NavigationMenuItem className="w-full">
-            <NavigationMenuLink asChild>
-              <Link 
-                to="/profile" 
-                className="group flex w-full items-center rounded-md border p-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground justify-start h-12"
-              >
-                <User className="mr-3 h-4 w-4" />
-                <span>Profile</span>
-              </Link>
-            </NavigationMenuLink>
-          </NavigationMenuItem>
+    <div className="flex flex-col h-full bg-card">
+      {/* Logo */}
+      <div className="p-6 border-b">
+        <div className="font-bold text-2xl bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+          📚 Library
         </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 p-4 space-y-1">
+        {navItems.map((item) => {
+          const Icon = item.icon
+          const isActive = location.pathname === item.href
+          
+          return (
+            <Button
+              key={item.href}
+              asChild
+              variant={isActive ? "secondary" : "ghost"}
+              className="w-full justify-start h-12 gap-3"
+            >
+              <Link to={item.href}>
+                <Icon className="h-4 w-4" />
+                <span>{item.label}</span>
+              </Link>
+            </Button>
+          )
+        })}
       </nav>
 
-      {/* Logout Button */}
-      <div className="p-4 border-t mt-auto">
-        <button
+      {/* Logout */}
+      <div className="p-4 border-t">
+        <Button
+          variant="ghost"
+          className="w-full justify-start h-12 gap-3 text-destructive hover:text-destructive/90 hover:bg-destructive/5"
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 text-sm text-destructive hover:text-destructive/80 p-3 rounded-md hover:bg-destructive/5 transition-colors"
         >
           <LogOut className="h-4 w-4" />
-          Logout
-        </button>
+          <span>Logout</span>
+        </Button>
       </div>
     </div>
   )
